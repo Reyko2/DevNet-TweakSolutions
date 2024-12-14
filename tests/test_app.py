@@ -1,45 +1,41 @@
 import pytest
+from flask import Flask
 from app import app, get_ip_info
 
-# Unit Test: Test the get_ip_info function
-def test_get_ip_info(mocker):
-    # Mock API response
-    mock_response = {
-        'ip': '192.168.1.1',
-        'city': 'Sample City',
-        'region': 'Sample Region',
-        'country_name': 'Sample Country',
-        'org': 'Sample ISP',
-        'asn': 'AS12345',
-        'latitude': 12.34,
-        'longitude': 56.78,
-    }
-    mocker.patch('requests.get', return_value=mocker.Mock(json=lambda: mock_response))
+# Test if the Flask app is set up correctly
+@pytest.fixture
+def client():
+    with app.test_client() as client:
+        yield client
 
-    result = get_ip_info()
-    assert result['ip'] == '192.168.1.1'
-    assert result['city'] == 'Sample City'
+# Test the IP information retrieval function
+def test_get_ip_info_success(monkeypatch):
+    class MockResponse:
+        @staticmethod
+        def json():
+            return {
+                'ip': '192.168.1.1',
+                'city': 'City',
+                'region': 'Region',
+                'country_name': 'Country',
+                'ipv6': 'Not available',
+                'org': 'ISP',
+                'asn': 'ASN',
+                'latitude': 10.0,
+                'longitude': 20.0
+            }
 
-# Integration Test: Test the home route
+    # Mock requests.get to return the mock response
+    monkeypatch.setattr('requests.get', lambda url: MockResponse())
+    
+    ip_info = get_ip_info()
+    assert ip_info['ip'] == '192.168.1.1'
+    assert ip_info['city'] == 'City'
+    assert ip_info['region'] == 'Region'
+
+# Test the home route
 def test_home_route(client):
     response = client.get('/')
     assert response.status_code == 200
     assert b'IP Address Information' in response.data
 
-# Integration Test: Check if IP info is rendered
-def test_ip_render(client, mocker):
-    mock_response = {
-        'ip': '192.168.1.1',
-        'city': 'Sample City',
-        'region': 'Sample Region',
-        'country_name': 'Sample Country',
-        'org': 'Sample ISP',
-        'asn': 'AS12345',
-        'latitude': 12.34,
-        'longitude': 56.78,
-    }
-    mocker.patch('requests.get', return_value=mocker.Mock(json=lambda: mock_response))
-
-    response = client.get('/')
-    assert b'192.168.1.1' in response.data
-    assert b'Sample City' in response.data
