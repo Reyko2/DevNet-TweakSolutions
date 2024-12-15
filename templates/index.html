@@ -63,7 +63,6 @@
             <p><strong>ASN: </strong>{{ ip_info['asn'] }}</p>
             <p><strong>Latitude: </strong>{{ ip_info['lat'] }}, <strong>Longitude: </strong>{{ ip_info['lon'] }}</p>
         </div>
-        <p><strong>Your Current IP Address (Client-Side): </strong><span id="user-ip"></span></p>
         <button onclick="toggleBlur()">Show IP Address</button>
     </div>
 
@@ -76,15 +75,6 @@
                 ipElement.classList.add('blurred');
             }
         }
-
-        fetch('https://api.ipify.org?format=json')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('user-ip').innerText = data.ip;
-            })
-            .catch(error => {
-                document.getElementById('user-ip').innerText = "Unable to fetch IP address.";
-            });
     </script>
 
 </body>
